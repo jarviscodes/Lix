@@ -8,7 +8,7 @@ import urllib
 # requests stuff
 root_url = "https://pybit.es/pages/articles.html"
 ua_string = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) Gecko/20100101 Firefox/73.0"
-base_header = {'User-Agent': 'Lix Link Fixer! (JARVIS WAS HERE)'}
+base_header = {'User-Agent': ua_string}
 
 # Create namedtuple
 ArtLink = namedtuple("ArtLink", "title link")
@@ -62,13 +62,7 @@ def test_single_link(link):
             print(f"\t ==> Couldn't test {link} because of SSL Cert error!")
 
 
-test_artlink = ArtLink(
-    title='How to Write a Guest Article for PyBites',
-    link='https://pybit.es/guest-howto-write-guest-posts.html'
-)
-
 all_artlinks = get_article_list()
-
 for alitm in all_artlinks:
     print(f"Running article: {alitm.title}")
     artBlock = get_post_content(alitm)
