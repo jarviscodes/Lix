@@ -1,32 +1,35 @@
 # Lix
 Lix is a script that scans for broken links on the Pybit.es articles!
-It's currently in a very premature alpha-form, but will be turned into a tool (patience, young padawans).
-
-*Known Issues*
-* False 404 reports for twitter links that have @handles. (Probably encoding)
-* Only checks if status != 200.
-  * Other statuses can be valid aswell
-  * Might wanna follow redirects?
-* Very Limited exception handling, while it's pretty important for the purpose.
-
-But it works!
 
 **Requirements**
 
 See requirements.txt
 
+**Usage**
+
+`python lix.py`
+
+`python lix.py -i 200`
+
+`python lix.py -i 200,201,301`
+
 *Example Output*
 
 ```
-Running article: A Python Orientation - How to Get Started
-         ==> No 200 for https://pythonhosted.org/behave/, instead got 404
-Running article: How Promotions work in Large Corporations
-Running article: Why Python is Great for Test Automation
-         ==> No 200 for http://docs.python-requests.org/en/master/, instead got 404
-Running article: My Anaconda Workflow: Python environment and package management made easy
-         ==> No 200 for https://anaconda.org/, instead got 403
-Running article: Watch Me Code - Solving Bite 21. Query a Nested Data Structure
-Running article: Why Python is so popular in Devops?
-         ==> No 200 for http://docs.python-requests.org/en/master/, instead got 404
-```
 
+(venv) E:\Users\Jarvis\PycharmProjects\Lix>python lix.py
+[~] Article: How to Write a Guest Article for PyBites
+        [OK] https://pybit.es/author/cedric-sambre.html => Seems good!
+        [OK] https://pybit.es/category/tools.html => Seems good!
+        [OK] https://github.com/pybites/pybites.github.io-src/ => Seems good!
+        [OK] https://github.com/pybites/pybites.github.io-src/tree/master/content => Seems good!
+        [NOTFOU] https://github.com/pybites/pybites.github.io-src/templates => Not found :(
+        [OK] https://github.com/pybites/pybites.github.io-src/tree/master/templates => Seems good!
+[*] Exiting because of CTRL+C!
+
+(venv) E:\Users\Jarvis\PycharmProjects\Lix>python lix.py -i 200
+[~] Article: How to Write a Guest Article for PyBites
+        [NOTFOU] https://github.com/pybites/pybites.github.io-src/templates => Not found :(
+[*] Exiting because of CTRL+C!
+
+```
