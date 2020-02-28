@@ -25,7 +25,7 @@ def get_article_list():
         for anchor in all_arts_raw:
             tmp_al = ArtLink(anchor.text, anchor['href'])
             artlink_list.append(tmp_al)
-        return artlink_list
+    return artlink_list
 
 
 def get_post_content(artlink: ArtLink):
@@ -34,7 +34,7 @@ def get_post_content(artlink: ArtLink):
         article_text = article_content_resp.text
         soup = BeautifulSoup(article_text, 'html.parser')
         article_block = soup.find('article', {'class': 'single'})
-        return article_block
+    return article_block
 
 
 def get_all_links(article_block):
@@ -62,14 +62,22 @@ def test_single_link(link):
             print(f"\t ==> SSL Error for {link}")
         except requests.exceptions.InvalidURL as ex:
             print(f"\t ==> {link} is not a valid URL, Skipping (Probably URL Example)")
+        except OSError as ex:
+            print(f"\t ==> {link} threw an OSError, target server down? (Dead Link!)")
+        except KeyboardInterrupt:
+            print(f"\n ==> Exiting because of CTRL+C!")
 
 
 
-all_artlinks = get_article_list()
-for alitm in all_artlinks:
-    print(f"Running article: {alitm.title}")
-    artBlock = get_post_content(alitm)
-    all_links = get_all_links(artBlock)
-    for link in all_links:
-        test_single_link(link)
+def main():
+    all_artlinks = get_article_list()
+    for alitm in all_artlinks:
+        print(f"Running article: {alitm.title}")
+        art_block = get_post_content(alitm)
+        all_links = get_all_links(art_block)
+        for link in all_links:
+            test_single_link(link)
 
+
+if __name__ == '__main__':
+    main()
