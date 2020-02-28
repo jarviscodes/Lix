@@ -4,6 +4,7 @@ import click
 from collections import namedtuple
 from bs4 import BeautifulSoup
 from HTTPResponses import response_code_dict
+from styled_symbols import print_error, print_fallback, print_good, print_info, print_warning
 
 import urllib
 
@@ -16,6 +17,7 @@ base_header = {'User-Agent': ua_string}
 # Create namedtuple
 ArtLink = namedtuple("ArtLink", "title link")
 artlink_list = []
+ignorecodes = []
 
 
 def get_article_list():
@@ -47,7 +49,7 @@ def get_all_links(article_block):
     try:
         [all_links_hreflist.append(linkhref['href']) for linkhref in all_links if linkhref['href'] is not None]
     except KeyError as ke:
-        # link doesnt have href so probably
+        # anchor doesnt have href so...
         pass
 
     # We will ignore relative links for now.
@@ -60,23 +62,33 @@ def test_single_link(link):
     with requests.Session() as _sess:
         try:
             resp = _sess.get(link, headers=base_header)
-            if resp.status_code != 200:
-                print(f"\t ==> No 200 for {link}, instead got {resp.status_code}")
+            if resp.status_code in response_code_dict.keys() and resp.status_code not in ignorecodes:
+                resp_style = response_code_dict[resp.status_code]
+                click.secho(message=f"\t[{resp_style.label}] {link} => {resp_style.message}", fg=resp_style.color_name)
         except requests.exceptions.SSLError as ex:
-            print(f"\t ==> SSL Error for {link}")
+            print_error(f"\tSSL Error for {link}")
         except requests.exceptions.InvalidURL as ex:
-            print(f"\t ==> {link} is not a valid URL, Skipping (Probably URL Example)")
+            print_error(f"\t{link} is not a valid URL, Skipping (Probably URL Example)")
         except OSError as ex:
-            print(f"\t ==> {link} threw an OSError, target server down? (Dead Link!)")
+            print_error(f"\t{link} threw an OSError, target server down? (Dead Link!)")
         except KeyboardInterrupt:
-            print(f"\n ==> Exiting because of CTRL+C!")
+            print_info("Exiting because of CTRL+C!")
+            exit()
 
 
-def main():
+@click.command()
+@click.option("-i", "--ignore-code", "ignore", type=str)
+def main(ignore):
+    global ignorecodes
+    if ignore is not None:
+        if "," in ignore:
+            [ignorecodes.append(int(code)) for code in ignore.split()]
+        else:
+            ignorecodes.append(int(ignore))
     all_artlinks = get_article_list()
-    for alitm in all_artlinks:
-        print(f"Running article: {alitm.title}")
-        art_block = get_post_content(alitm)
+    for article_link in all_artlinks:
+        print_good(f"Article: {article_link.title}")
+        art_block = get_post_content(article_link)
         all_links = get_all_links(art_block)
         for link in all_links:
             test_single_link(link)
