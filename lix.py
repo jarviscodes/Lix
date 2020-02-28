@@ -58,8 +58,11 @@ def test_single_link(link):
             resp = _sess.get(link, headers=base_header)
             if resp.status_code != 200:
                 print(f"\t ==> No 200 for {link}, instead got {resp.status_code}")
-        except:
-            print(f"\t ==> Couldn't test {link} because of SSL Cert error!")
+        except requests.exceptions.SSLError as ex:
+            print(f"\t ==> SSL Error for {link}")
+        except requests.exceptions.InvalidURL as ex:
+            print(f"\t ==> {link} is not a valid URL, Skipping (Probably URL Example)")
+
 
 
 all_artlinks = get_article_list()
