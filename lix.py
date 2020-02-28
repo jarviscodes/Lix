@@ -1,7 +1,10 @@
 import ssl
 import requests
+import click
 from collections import namedtuple
 from bs4 import BeautifulSoup
+from HTTPResponses import response_code_dict
+
 import urllib
 
 
@@ -44,6 +47,7 @@ def get_all_links(article_block):
     try:
         [all_links_hreflist.append(linkhref['href']) for linkhref in all_links if linkhref['href'] is not None]
     except KeyError as ke:
+        # link doesnt have href so probably
         pass
 
     # We will ignore relative links for now.
@@ -66,7 +70,6 @@ def test_single_link(link):
             print(f"\t ==> {link} threw an OSError, target server down? (Dead Link!)")
         except KeyboardInterrupt:
             print(f"\n ==> Exiting because of CTRL+C!")
-
 
 
 def main():
