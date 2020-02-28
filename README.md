@@ -10,11 +10,10 @@ It's currently in a very premature alpha-form, but will be turned into a tool (p
 * Very Limited exception handling, while it's pretty important for the purpose.
 
 But it works!
- 
 
-*Requirements*
-* requests
-* Beautifulsoup
+**Requirements**
+
+See requirements.txt
 
 *Example Output*
 
