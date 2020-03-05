@@ -24,6 +24,13 @@ class WaybackRequestError(Exception):
         super(WaybackRequestError, self).__init__(msg)
 
 
+class NoWaybackSnapShotsError(Exception):
+    def __init__(self, msg=None):
+        if msg is None:
+            msg = "You asked something that relies on existing snapshots but none were found!"
+        super(NoWaybackSnapShotsError, self).__init__(msg)
+
+
 class WayBackWebEntry(object):
     url = ""
     available = False
@@ -68,3 +75,9 @@ class WayBackWebEntry(object):
     @property
     def has_snapshots(self):
         return len(self.snapshots) > 0
+
+    @property
+    def get_snapshot_url(self):
+        if not self.has_snapshots:
+            raise NoWaybackSnapShotsError
+        return self.snapshots['closest']['url']

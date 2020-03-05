@@ -1,7 +1,8 @@
 import pytest
 
 from datetime import datetime
-from waybackweb import WayBackWebEntry, WrongURLFormatInputException, WrongArticleDateInputException
+from waybackweb import WayBackWebEntry, WrongURLFormatInputException, WrongArticleDateInputException, \
+    NoWaybackSnapShotsError, WaybackRequestError
 
 datestring = "12/07/2019"
 other_datestring = "07/12/2019"
@@ -11,6 +12,8 @@ good_http_url = "http://example.com"
 
 existing_archive_link = "http://www.google.com"
 inexistant_archive_link = "http://thisprobablyshouldnotexist.hellno"
+
+expected_urlprop_example = "http://web.archive.org/web/20190711235958/https://www.google.com/"
 
 
 def test_new_wbe_object_date_type():
@@ -55,3 +58,14 @@ def test_has_snapshots_prop():
     assert test_obj.has_snapshots is False
     test_obj = WayBackWebEntry(url=existing_archive_link, article_date=dto)
     assert test_obj.has_snapshots is True
+
+
+def test_get_snapshot_url_prop():
+    dto = datetime.strptime(datestring, "%d/%m/%Y")
+    test_obj = WayBackWebEntry(url=inexistant_archive_link, article_date=dto)
+    with pytest.raises(NoWaybackSnapShotsError) as excep:
+        no_url = test_obj.get_snapshot_url
+    assert "You asked something that relies on existing snapshots but none were found!" == str(excep.value)
+
+    test_obj = WayBackWebEntry(url=existing_archive_link, article_date=dto)
+    assert test_obj.get_snapshot_url == expected_urlprop_example
