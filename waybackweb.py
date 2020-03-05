@@ -1,3 +1,5 @@
+import requests
+import json
 from datetime import datetime
 
 
@@ -15,10 +17,18 @@ class WrongURLFormatInputException(Exception):
         super(WrongURLFormatInputException, self).__init__(msg)
 
 
+class WaybackRequestError(Exception):
+    def __init__(self, msg=None):
+        if msg is None:
+            msg = "We couldnt connect to wayback. Check your internet, DNS, and the status of archive.org"
+        super(WaybackRequestError, self).__init__(msg)
+
+
 class WayBackWebEntry(object):
     url = ""
     available = False
     request_date = None
+    snapshots = {}
 
     def __init__(self, url, article_date):
         if not isinstance(article_date, datetime):
@@ -29,13 +39,28 @@ class WayBackWebEntry(object):
             raise WrongURLFormatInputException(None, url)
         self.url = url
 
+        self.snapshots = self._get_snapshots_from_wayback()
+
     def __str__(self):
         return self.url
 
-    # Recalculate when requested. Date might change!
+    def _get_snapshots_from_wayback(self):
+        try:
+            with requests.Session() as _sess:
+                resp = _sess.get(self._wayback_request_url)
+                json_string = resp.text
+            json_obj = json.loads(json_string)
+            snapshots = json_obj['archived_snapshots']
+            return snapshots
+        except requests.RequestException:
+            raise WaybackRequestError
+
+    @property
+    def _wayback_request_url(self):
+        wb_req_url = f"https://archive.org/wayback/available?url={self.url}&timestamp={self.date_as_wb_timestamp}"
+        return wb_req_url
+
     @property
     def date_as_wb_timestamp(self):
         wb_timestamp = self.request_date.strftime("%Y%m%d")
         return wb_timestamp
-
-

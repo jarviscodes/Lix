@@ -9,6 +9,9 @@ faulty_url = "example.com"
 good_https_url = "https://example.com"
 good_http_url = "http://example.com"
 
+existing_archive_link = "http://www.google.com"
+inexistant_archive_link = "http://thisprobablyshouldnotexist.hellno"
+
 
 def test_new_wbe_object_date_type():
     with pytest.raises(WrongArticleDateInputException) as excep:
@@ -31,3 +34,16 @@ def test_date_to_wbtimestamp():
     # We should be able to change the date.
     test_obj.request_date = datetime.strptime(other_datestring, "%d/%m/%Y")
     assert test_obj.date_as_wb_timestamp == "20191207"
+
+
+def test_get_snapshots_from_wayback():
+    dto = datetime.strptime(datestring, "%d/%m/%Y")
+    test_obj = WayBackWebEntry(url=existing_archive_link, article_date=dto)
+    assert "closest" in test_obj.snapshots
+
+
+def test_get_snapshots_inexistant_from_wayback():
+    dto = datetime.strptime(datestring, "%d/%m/%Y")
+    test_obj = WayBackWebEntry(url=inexistant_archive_link, article_date=dto)
+    assert len(test_obj.snapshots) == 0
+    assert type(test_obj.snapshots) == dict
