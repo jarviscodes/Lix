@@ -64,3 +64,7 @@ class WayBackWebEntry(object):
     def date_as_wb_timestamp(self):
         wb_timestamp = self.request_date.strftime("%Y%m%d")
         return wb_timestamp
+
+    @property
+    def has_snapshots(self):
+        return len(self.snapshots) > 0

@@ -47,3 +47,11 @@ def test_get_snapshots_inexistant_from_wayback():
     test_obj = WayBackWebEntry(url=inexistant_archive_link, article_date=dto)
     assert len(test_obj.snapshots) == 0
     assert type(test_obj.snapshots) == dict
+
+
+def test_has_snapshots_prop():
+    dto = datetime.strptime(datestring, "%d/%m/%Y")
+    test_obj = WayBackWebEntry(url=inexistant_archive_link, article_date=dto)
+    assert test_obj.has_snapshots is False
+    test_obj = WayBackWebEntry(url=existing_archive_link, article_date=dto)
+    assert test_obj.has_snapshots is True
