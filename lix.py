@@ -87,7 +87,7 @@ def main(ignore):
             ignorecodes.append(int(ignore))
     all_artlinks = get_article_list()
     for article_link in all_artlinks:
-        print_good(f"Article: {article_link.title}")
+        print_info(f"Article: {article_link.title}")
         art_block = get_post_content(article_link)
         all_links = get_all_links(art_block)
         for link in all_links:
