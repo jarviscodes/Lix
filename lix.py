@@ -79,6 +79,17 @@ def get_all_links(article_block):
 
     return abs_links_hreflist
 
+def handle_wayback_search(link, article_datetime):
+    try:
+        wb_obj = WayBackWebEntry(link, article_datetime)
+        if wb_obj.has_snapshots:
+            print_good(f"\t[WB] {wb_obj.get_snapshot_url}")
+        else:
+            print_error(f"\t[WB] No wayback snapshots :( You're on your own!")
+    except (NoWaybackSnapShotsError, WaybackRequestError, WrongArticleDateInputException,
+            WrongURLFormatInputException) as ex:
+        print_error(f"\t[WB] Could not get wayback URL: {str(ex.msg)}")
+
 
 def test_single_link(link, **kwargs):
     with requests.Session() as _sess:
@@ -89,22 +100,22 @@ def test_single_link(link, **kwargs):
                 click.secho(message=f"\t[{resp_style.label}] {link} => {resp_style.message}", fg=resp_style.color_name)
                 if use_wayback:
                     article_datetime = kwargs['search_date']
-                    try:
-                        wb_obj = WayBackWebEntry(link, article_datetime)
-                        if wb_obj.has_snapshots:
-                            print_good(f"\t[WB] {wb_obj.get_snapshot_url}")
-                        else:
-                            print_error(f"\t[WB] No wayback snapshots :( You're on your own!")
-                    except (NoWaybackSnapShotsError, WaybackRequestError, WrongArticleDateInputException,
-                            WrongURLFormatInputException) as ex:
-                        print_error(f"\t[WB] Could not get wayback URL: {str(ex.msg)}")
+                    handle_wayback_search(link, article_datetime)
 
         except requests.exceptions.SSLError as ex:
             print_error(f"\tSSL Error for {link}")
+            if use_wayback:
+                article_datetime = kwargs['search_date']
+                handle_wayback_search(link, article_datetime)
+
         except requests.exceptions.InvalidURL as ex:
             print_error(f"\t{link} is not a valid URL, Skipping (Probably URL Example)")
         except OSError as ex:
             print_error(f"\t{link} threw an OSError, target server down? (Dead Link!)")
+            if use_wayback:
+                article_datetime = kwargs['search_date']
+                handle_wayback_search(link, article_datetime)
+
         except KeyboardInterrupt:
             print_info("Exiting because of CTRL+C!")
             exit()
