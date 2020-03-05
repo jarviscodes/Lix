@@ -80,13 +80,25 @@ def get_all_links(article_block):
     return abs_links_hreflist
 
 
-def test_single_link(link):
+def test_single_link(link, **kwargs):
     with requests.Session() as _sess:
         try:
             resp = _sess.get(link, headers=base_header)
             if resp.status_code in response_code_dict.keys() and resp.status_code not in ignorecodes:
                 resp_style = response_code_dict[resp.status_code]
                 click.secho(message=f"\t[{resp_style.label}] {link} => {resp_style.message}", fg=resp_style.color_name)
+                if use_wayback:
+                    article_datetime = kwargs['search_date']
+                    try:
+                        wb_obj = WayBackWebEntry(link, article_datetime)
+                        if wb_obj.has_snapshots:
+                            print_good(f"\t[WB] {wb_obj.get_snapshot_url}")
+                        else:
+                            print_error(f"\t[WB] No wayback snapshots :( You're on your own!")
+                    except (NoWaybackSnapShotsError, WaybackRequestError, WrongArticleDateInputException,
+                            WrongURLFormatInputException) as ex:
+                        print_error(f"\t[WB] Could not get wayback URL: {str(ex.msg)}")
+
         except requests.exceptions.SSLError as ex:
             print_error(f"\tSSL Error for {link}")
         except requests.exceptions.InvalidURL as ex:
@@ -114,22 +126,16 @@ def main(ignore, wayback):
 
     all_artlinks = get_article_list()
     for article_link in all_artlinks:
-        article_datetime = get_datetime_from_article(article_link)
         print_info(f"Article: {article_link.title}")
         art_block = get_post_content(article_link)
         all_links = get_all_links(art_block)
         for link in all_links:
-            test_single_link(link)
             if use_wayback:
-                try:
-                    wb_obj = WayBackWebEntry(link, article_datetime)
-                    if wb_obj.has_snapshots:
-                        print_good(f"\t[WB] {wb_obj.get_snapshot_url}")
-                    else:
-                        print_error(f"\t[WB] No wayback snapshots :( You're on your own!")
-                except (NoWaybackSnapShotsError, WaybackRequestError, WrongArticleDateInputException,
-                        WrongURLFormatInputException) as ex:
-                    print_error(f"\t[WB] Could not get wayback URL: {str(ex.msg)}")
+                article_datetime = get_datetime_from_article(article_link)
+                test_single_link(link, search_date=article_datetime)
+            else:
+                test_single_link(link)
+
 
 
 if __name__ == '__main__':
