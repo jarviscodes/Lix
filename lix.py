@@ -1,10 +1,20 @@
-import ssl
-import requests
 import click
+
 from collections import namedtuple
+
+from datetime import datetime
+from pytz import timezone
+import pytz
+
+import requests
 from bs4 import BeautifulSoup
+
 from HTTPResponses import response_code_dict
 from styled_symbols import print_error, print_fallback, print_good, print_info, print_warning
+
+from waybackweb import WayBackWebEntry
+from waybackweb import NoWaybackSnapShotsError, WaybackRequestError, WrongArticleDateInputException, \
+    WrongURLFormatInputException
 
 import urllib
 
@@ -18,6 +28,9 @@ base_header = {'User-Agent': ua_string}
 ArtLink = namedtuple("ArtLink", "title link")
 artlink_list = []
 ignorecodes = []
+
+# Wayback!
+use_wayback = False
 
 
 def get_article_list():
@@ -40,6 +53,15 @@ def get_post_content(artlink: ArtLink):
         soup = BeautifulSoup(article_text, 'html.parser')
         article_block = soup.find('article', {'class': 'single'})
     return article_block
+
+
+def get_datetime_from_article(artlink: ArtLink):
+    with requests.Session() as _sess:
+        article_content_resp = _sess.get(artlink.link, headers=base_header)
+    soup = BeautifulSoup(article_content_resp.text, 'html.parser')
+    pub_time_raw = soup.find('meta', {'property': 'article:published_time'})
+    pub_time_string = pub_time_raw['content']
+    return datetime.fromisoformat(pub_time_string)
 
 
 def get_all_links(article_block):
@@ -78,20 +100,37 @@ def test_single_link(link):
 
 @click.command()
 @click.option("-i", "--ignore-code", "ignore", type=str)
-def main(ignore):
+@click.option("-w", "--wayback", "wayback", is_flag=True)
+def main(ignore, wayback):
     global ignorecodes
+    global use_wayback
+
     if ignore is not None:
         if "," in ignore:
             [ignorecodes.append(int(code)) for code in ignore.split()]
         else:
             ignorecodes.append(int(ignore))
+    use_wayback = wayback
+
     all_artlinks = get_article_list()
     for article_link in all_artlinks:
+        article_datetime = get_datetime_from_article(article_link)
         print_info(f"Article: {article_link.title}")
         art_block = get_post_content(article_link)
         all_links = get_all_links(art_block)
         for link in all_links:
             test_single_link(link)
+            if use_wayback:
+                try:
+                    wb_obj = WayBackWebEntry(link, article_datetime)
+                    if wb_obj.has_snapshots:
+                        print_good(f"\t\t[WB] here's a wayback snapshot:")
+                        print_good(f"\t\t[WB] {wb_obj.get_snapshot_url}")
+                    else:
+                        print_error(f"\t\t[WB] No wayback snapshots :( You're on your own!")
+                except (NoWaybackSnapShotsError, WaybackRequestError, WrongArticleDateInputException,
+                        WrongURLFormatInputException) as ex:
+                    print_error(f"\t\t[WB] Could not get wayback URL: {str(ex.msg)}")
 
 
 if __name__ == '__main__':
