@@ -124,12 +124,12 @@ def main(ignore, wayback):
                 try:
                     wb_obj = WayBackWebEntry(link, article_datetime)
                     if wb_obj.has_snapshots:
-                        print_good(f"\t\t[WB] {wb_obj.get_snapshot_url}")
+                        print_good(f"\t[WB] {wb_obj.get_snapshot_url}")
                     else:
-                        print_error(f"\t\t[WB] No wayback snapshots :( You're on your own!")
+                        print_error(f"\t[WB] No wayback snapshots :( You're on your own!")
                 except (NoWaybackSnapShotsError, WaybackRequestError, WrongArticleDateInputException,
                         WrongURLFormatInputException) as ex:
-                    print_error(f"\t\t[WB] Could not get wayback URL: {str(ex.msg)}")
+                    print_error(f"\t[WB] Could not get wayback URL: {str(ex.msg)}")
 
 
 if __name__ == '__main__':
